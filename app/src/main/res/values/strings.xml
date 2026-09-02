@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">روان‌بردار</string>
+    <string name="app_tagline">مدیریت هوشمند کلینیک روان‌شناسی</string>
+
+    <!-- Login -->
+    <string name="login_title">ورود مدیر</string>
+    <string name="login_subtitle">به پنل مدیریت کلینیک روان‌بردار خوش آمدید</string>
+    <string name="username_label">نام کاربری</string>
+    <string name="password_label">رمز عبور</string>
+    <string name="login_button">ورود به پنل</string>
+    <string name="login_error_empty">نام کاربری و رمز عبور را وارد کنید</string>
+    <string name="login_error_invalid">نام کاربری یا رمز عبور اشتباه است</string>
+    <string name="show_password">نمایش رمز عبور</string>
+    <string name="hide_password">پنهان کردن رمز عبور</string>
+    <string name="default_credentials_hint">نام کاربری پیش‌فرض: admin — رمز عبور: admin123</string>
+
+    <!-- Navigation -->
+    <string name="nav_calendar">تقویم</string>
+    <string name="nav_patients">بیماران</string>
+    <string name="nav_settings">تنظیمات</string>
+
+    <!-- Calendar -->
+    <string name="calendar_title">تقویم نوبت‌ها</string>
+    <string name="today">امروز</string>
+    <string name="add_appointment">افزودن نوبت</string>
+    <string name="edit_appointment">ویرایش نوبت</string>
+    <string name="appointments_of_day">نوبت‌های این روز</string>
+    <string name="no_appointments">نوبتی برای این روز ثبت نشده است</string>
+    <string name="select_patient">انتخاب بیمار</string>
+    <string name="choose_patient_placeholder">یک بیمار را انتخاب کنید</string>
+    <string name="appointment_time">ساعت نوبت</string>
+    <string name="appointment_duration">مدت زمان (دقیقه)</string>
+    <string name="appointment_notes">یادداشت جلسه</string>
+    <string name="save">ذخیره</string>
+    <string name="cancel">انصراف</string>
+    <string name="delete">حذف</string>
+    <string name="edit">ویرایش</string>
+    <string name="confirm_delete_appointment_title">حذف نوبت</string>
+    <string name="confirm_delete_appointment_msg">آیا از حذف این نوبت مطمئن هستید؟</string>
+    <string name="appointment_status_scheduled">در انتظار</string>
+    <string name="appointment_status_done">انجام‌شده</string>
+    <string name="appointment_status_canceled">لغو شده</string>
+    <string name="mark_done">علامت‌گذاری به‌عنوان انجام‌شده</string>
+    <string name="mark_canceled">لغو نوبت</string>
+    <string name="prev_month">ماه قبل</string>
+    <string name="next_month">ماه بعد</string>
+    <string name="no_patients_for_appointment">ابتدا یک بیمار ثبت کنید</string>
+
+    <!-- Patients -->
+    <string name="patients_title">لیست بیماران</string>
+    <string name="search_patient_hint">جستجوی نام یا شماره تماس…</string>
+    <string name="add_patient">افزودن بیمار</string>
+    <string name="no_patients">هنوز بیماری ثبت نشده است</string>
+    <string name="no_patients_hint">با دکمهٔ زیر اولین بیمار را اضافه کنید</string>
+    <string name="patient_first_name">نام</string>
+    <string name="patient_last_name">نام خانوادگی</string>
+    <string name="patient_phone">شماره تماس</string>
+    <string name="patient_national_id">کد ملی (اختیاری)</string>
+    <string name="patient_gender">جنسیت</string>
+    <string name="gender_male">مرد</string>
+    <string name="gender_female">زن</string>
+    <string name="gender_other">سایر</string>
+    <string name="patient_birth_date">تاریخ تولد</string>
+    <string name="patient_notes">یادداشت‌های بالینی</string>
+    <string name="patient_notes_hint">سوابق، تشخیص، اهداف درمان و یادداشت‌های جلسات…</string>
+    <string name="patient_documents">مدارک و فایل‌ها</string>
+    <string name="add_document">افزودن مدرک</string>
+    <string name="add_from_files">انتخاب از فایل‌ها</string>
+    <string name="take_photo">عکس با دوربین</string>
+    <string name="no_documents">هنوز مدرکی بارگذاری نشده است</string>
+    <string name="confirm_delete_patient_title">حذف بیمار</string>
+    <string name="confirm_delete_patient_msg">با حذف بیمار، تمام نوبت‌ها و مدارک او نیز حذف خواهد شد. ادامه می‌دهید؟</string>
+    <string name="confirm_delete_document_title">حذف مدرک</string>
+    <string name="confirm_delete_document_msg">این مدرک حذف شود؟</string>
+    <string name="patient_detail_new_title">بیمار جدید</string>
+    <string name="patient_detail_edit_title">ویرایش پروندهٔ بیمار</string>
+    <string name="required_field_error">این فیلد الزامی است</string>
+    <string name="patient_saved">اطلاعات بیمار ذخیره شد</string>
+    <string name="upcoming_appointment">نوبت بعدی</string>
+    <string name="no_upcoming_appointment">نوبت آینده‌ای ثبت نشده</string>
+    <string name="patient_added_on">تاریخ ثبت پرونده</string>
+    <string name="clear_selection">پاک کردن</string>
+    <string name="select_date">انتخاب تاریخ</string>
+    <string name="select_time">انتخاب ساعت</string>
+    <string name="hour_label">ساعت</string>
+    <string name="minute_label">دقیقه</string>
+
+    <!-- Settings -->
+    <string name="settings_title">تنظیمات</string>
+    <string name="admin_profile">پروفایل مدیر</string>
+    <string name="full_name">نام و نام خانوادگی</string>
+    <string name="change_password">تغییر رمز عبور</string>
+    <string name="current_password">رمز عبور فعلی</string>
+    <string name="new_password">رمز عبور جدید</string>
+    <string name="confirm_new_password">تکرار رمز عبور جدید</string>
+    <string name="change_password_success">رمز عبور با موفقیت تغییر کرد</string>
+    <string name="change_password_error_mismatch">رمز عبور جدید و تکرار آن یکسان نیستند</string>
+    <string name="change_password_error_wrong_current">رمز عبور فعلی اشتباه است</string>
+    <string name="change_password_error_short">رمز عبور باید حداقل ۴ کاراکتر باشد</string>
+    <string name="logout">خروج از حساب</string>
+    <string name="logout_confirm_title">خروج از حساب</string>
+    <string name="logout_confirm_msg">آیا مطمئن هستید که می‌خواهید خارج شوید؟</string>
+    <string name="about_app">دربارهٔ برنامه</string>
+    <string name="app_version">نسخهٔ ۱٫۰٫۰</string>
+    <string name="calendar_system_label">تقویم: هجری شمسی</string>
+
+    <!-- Common -->
+    <string name="fab_add">افزودن</string>
+    <string name="search">جستجو</string>
+    <string name="back">بازگشت</string>
+    <string name="close">بستن</string>
+    <string name="confirm">تأیید</string>
+    <string name="apply">اعمال</string>
+    <string name="loading">در حال بارگذاری…</string>
+
+    <!-- Weekdays (Sat -> Fri) -->
+    <string name="weekday_sat">شنبه</string>
+    <string name="weekday_sun">یکشنبه</string>
+    <string name="weekday_mon">دوشنبه</string>
+    <string name="weekday_tue">سه‌شنبه</string>
+    <string name="weekday_wed">چهارشنبه</string>
+    <string name="weekday_thu">پنجشنبه</string>
+    <string name="weekday_fri">جمعه</string>
+</resources>
