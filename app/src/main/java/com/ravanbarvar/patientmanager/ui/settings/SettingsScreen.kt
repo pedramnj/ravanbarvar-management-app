@@ -20,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -32,6 +33,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -60,10 +63,11 @@ import com.ravanbarvar.patientmanager.ui.theme.SagePrimary
 fun SettingsScreen(onLoggedOut: () -> Unit) {
     val app = currentApp()
     val viewModel: SettingsViewModel = viewModel(
-        factory = viewModelFactory { initializer { SettingsViewModel(app.authRepository) } }
+        factory = viewModelFactory { initializer { SettingsViewModel(app.authRepository, app.sessionManager) } }
     )
     val admin by viewModel.currentAdmin.collectAsState()
     val passwordState by viewModel.changePasswordState.collectAsState()
+    val remindersEnabled by viewModel.remindersEnabled.collectAsState()
 
     var showLogoutConfirm by remember { mutableStateOf(false) }
 
@@ -205,6 +209,42 @@ fun SettingsScreen(onLoggedOut: () -> Unit) {
                         Text(stringResource(R.string.apply))
                     }
                 }
+            }
+        }
+
+        Spacer(Modifier.height(18.dp))
+
+        // Reminders card
+        Card(
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(18.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Filled.NotificationsActive, contentDescription = null, tint = SagePrimary)
+                Spacer(Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.appointment_reminders),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = stringResource(R.string.appointment_reminders_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = remindersEnabled,
+                    onCheckedChange = viewModel::setRemindersEnabled,
+                    colors = SwitchDefaults.colors(checkedThumbColor = SagePrimary, checkedTrackColor = SagePrimary.copy(alpha = 0.5f))
+                )
             }
         }
 

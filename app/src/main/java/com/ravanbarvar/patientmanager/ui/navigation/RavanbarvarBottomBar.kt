@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -18,6 +19,7 @@ import com.ravanbarvar.patientmanager.ui.theme.SagePrimary
 private data class BottomItem(val route: String, val icon: ImageVector, val labelRes: Int)
 
 private val items = listOf(
+    BottomItem(Routes.Dashboard, Icons.Filled.Home, R.string.nav_dashboard),
     BottomItem(Routes.Calendar, Icons.Filled.CalendarMonth, R.string.nav_calendar),
     BottomItem(Routes.Patients, Icons.Filled.Groups, R.string.nav_patients),
     BottomItem(Routes.Settings, Icons.Filled.Settings, R.string.nav_settings)

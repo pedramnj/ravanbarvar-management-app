@@ -3,6 +3,7 @@ package com.ravanbarvar.patientmanager.ui.navigation
 object Routes {
     const val Splash = "splash"
     const val Login = "login"
+    const val Dashboard = "dashboard"
     const val Calendar = "calendar"
     const val Patients = "patients"
     const val Settings = "settings"
@@ -10,5 +11,5 @@ object Routes {
 
     fun patientDetail(patientId: Long) = "patient_detail/$patientId"
 
-    val bottomBarRoutes = setOf(Calendar, Patients, Settings)
+    val bottomBarRoutes = setOf(Dashboard, Calendar, Patients, Settings)
 }

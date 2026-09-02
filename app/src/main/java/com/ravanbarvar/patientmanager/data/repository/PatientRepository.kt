@@ -19,6 +19,9 @@ class PatientRepository(
 
     fun observePatientCount(): Flow<Int> = patientDao.observeCount()
 
+    fun observePatientCountCreatedSince(sinceMillis: Long): Flow<Int> =
+        patientDao.observeCountCreatedSince(sinceMillis)
+
     suspend fun addPatient(patient: PatientEntity): Long = patientDao.insert(patient)
 
     suspend fun updatePatient(patient: PatientEntity) = patientDao.update(patient)

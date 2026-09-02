@@ -36,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -43,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import coil.compose.AsyncImage
 import com.ravanbarvar.patientmanager.R
 import com.ravanbarvar.patientmanager.data.local.entity.PatientEntity
 import com.ravanbarvar.patientmanager.ui.currentApp
@@ -157,12 +159,23 @@ private fun PatientRow(patient: PatientEntity, onClick: () -> Unit) {
                     .background(LavenderSecondary.copy(alpha = 0.85f)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = patient.firstName.take(1),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    fontWeight = FontWeight.SemiBold
-                )
+                if (patient.photoUri != null) {
+                    AsyncImage(
+                        model = patient.photoUri,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(46.dp)
+                            .clip(CircleShape)
+                    )
+                } else {
+                    Text(
+                        text = patient.firstName.take(1),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
             Spacer(Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {

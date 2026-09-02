@@ -2,6 +2,7 @@ package com.ravanbarvar.patientmanager.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ravanbarvar.patientmanager.data.datastore.SessionManager
 import com.ravanbarvar.patientmanager.data.local.entity.AdminUserEntity
 import com.ravanbarvar.patientmanager.data.repository.AuthRepository
 import com.ravanbarvar.patientmanager.data.repository.ChangePasswordResult
@@ -22,10 +23,20 @@ data class ChangePasswordUiState(
     val successMessage: String? = null
 )
 
-class SettingsViewModel(private val authRepository: AuthRepository) : ViewModel() {
+class SettingsViewModel(
+    private val authRepository: AuthRepository,
+    private val sessionManager: SessionManager
+) : ViewModel() {
 
     val currentAdmin: StateFlow<AdminUserEntity?> = authRepository.currentAdmin
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val remindersEnabled: StateFlow<Boolean> = sessionManager.remindersEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
+    fun setRemindersEnabled(enabled: Boolean) {
+        viewModelScope.launch { sessionManager.setRemindersEnabled(enabled) }
+    }
 
     private val _changePasswordState = MutableStateFlow(ChangePasswordUiState())
     val changePasswordState: StateFlow<ChangePasswordUiState> = _changePasswordState.asStateFlow()

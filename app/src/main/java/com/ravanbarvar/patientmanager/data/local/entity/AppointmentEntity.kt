@@ -25,7 +25,9 @@ data class AppointmentEntity(
     val durationMinutes: Int,
     val notes: String,
     val status: String,
-    val createdAt: Long
+    val createdAt: Long,
+    val feeAmount: Long? = null,
+    val isPaid: Boolean = false
 )
 
 object AppointmentStatus {

@@ -1,5 +1,9 @@
 package com.ravanbarvar.patientmanager.ui.calendar
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +28,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.CalendarViewMonth
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
@@ -31,6 +36,8 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.EventBusy
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.NotInterested
+import androidx.compose.material.icons.filled.Paid
+import androidx.compose.material.icons.filled.ViewAgenda
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -42,11 +49,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,10 +66,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -68,22 +81,28 @@ import com.ravanbarvar.patientmanager.data.local.entity.AppointmentStatus
 import com.ravanbarvar.patientmanager.ui.currentApp
 import com.ravanbarvar.patientmanager.ui.theme.LavenderSecondary
 import com.ravanbarvar.patientmanager.ui.theme.SagePrimary
+import com.ravanbarvar.patientmanager.ui.theme.SuccessGreen
+import com.ravanbarvar.patientmanager.ui.theme.WarningAmber
 import com.ravanbarvar.patientmanager.ui.theme.statusCanceled
 import com.ravanbarvar.patientmanager.ui.theme.statusDone
 import com.ravanbarvar.patientmanager.ui.theme.statusScheduled
 import com.ravanbarvar.patientmanager.util.JalaliCalendar
 import com.ravanbarvar.patientmanager.util.JalaliDate
 import com.ravanbarvar.patientmanager.util.PersianDigits
+import com.ravanbarvar.patientmanager.util.formatToman
 import com.ravanbarvar.patientmanager.util.minutesToPersianClock
 import kotlinx.coroutines.launch
+
+private enum class CalendarViewMode { MONTH, AGENDA }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen() {
     val app = currentApp()
+    val context = LocalContext.current
     val viewModel: CalendarViewModel = viewModel(
         factory = viewModelFactory {
-            initializer { CalendarViewModel(app.appointmentRepository, app.patientRepository) }
+            initializer { CalendarViewModel(app.appointmentRepository, app.patientRepository, app.sessionManager, app) }
         }
     )
 
@@ -91,14 +110,27 @@ fun CalendarScreen() {
     val selectedDate by viewModel.selectedDate.collectAsState()
     val appointments by viewModel.appointmentsForSelectedDate.collectAsState()
     val appointmentDates by viewModel.appointmentDatesInMonth.collectAsState()
+    val agendaAppointments by viewModel.agendaAppointments.collectAsState()
     val patients by viewModel.patients.collectAsState()
 
+    var viewMode by remember { mutableStateOf(CalendarViewMode.MONTH) }
     var showEditor by remember { mutableStateOf(false) }
     var editingAppointment by remember { mutableStateOf<AppointmentWithPatientName?>(null) }
     var appointmentPendingDelete by remember { mutableStateOf<AppointmentWithPatientName?>(null) }
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     val scope = rememberCoroutineScope()
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val granted = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
+                android.content.pm.PackageManager.PERMISSION_GRANTED
+            if (!granted) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
 
     Scaffold(
         floatingActionButton = {
@@ -119,42 +151,84 @@ fun CalendarScreen() {
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            Text(
-                text = stringResource(R.string.calendar_title),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp)
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 14.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.calendar_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.SemiBold
+                )
+                SingleChoiceSegmentedButtonRow {
+                    SegmentedButton(
+                        selected = viewMode == CalendarViewMode.MONTH,
+                        onClick = { viewMode = CalendarViewMode.MONTH },
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                        colors = SegmentedButtonDefaults.colors(activeContainerColor = SagePrimary.copy(alpha = 0.16f)),
+                        icon = {}
+                    ) {
+                        Icon(Icons.Filled.CalendarViewMonth, contentDescription = stringResource(R.string.calendar_view_month), modifier = Modifier.size(18.dp))
+                    }
+                    SegmentedButton(
+                        selected = viewMode == CalendarViewMode.AGENDA,
+                        onClick = { viewMode = CalendarViewMode.AGENDA },
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                        colors = SegmentedButtonDefaults.colors(activeContainerColor = SagePrimary.copy(alpha = 0.16f)),
+                        icon = {}
+                    ) {
+                        Icon(Icons.Filled.ViewAgenda, contentDescription = stringResource(R.string.calendar_view_agenda), modifier = Modifier.size(18.dp))
+                    }
+                }
+            }
 
-            MonthHeader(
-                displayedMonth = displayedMonth,
-                onPrev = viewModel::goToPrevMonth,
-                onNext = viewModel::goToNextMonth,
-                onToday = viewModel::goToToday
-            )
+            if (viewMode == CalendarViewMode.MONTH) {
+                MonthHeader(
+                    displayedMonth = displayedMonth,
+                    onPrev = viewModel::goToPrevMonth,
+                    onNext = viewModel::goToNextMonth,
+                    onToday = viewModel::goToToday
+                )
 
-            WeekdayHeaderRow()
+                WeekdayHeaderRow()
 
-            MonthGrid(
-                displayedMonth = displayedMonth,
-                selectedDate = selectedDate,
-                appointmentDates = appointmentDates,
-                onSelectDate = viewModel::selectDate
-            )
+                MonthGrid(
+                    displayedMonth = displayedMonth,
+                    selectedDate = selectedDate,
+                    appointmentDates = appointmentDates,
+                    onSelectDate = viewModel::selectDate
+                )
 
-            Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(8.dp))
 
-            DayAgenda(
-                selectedDate = selectedDate,
-                appointments = appointments,
-                onAppointmentClick = {
-                    editingAppointment = it
-                    showEditor = true
-                },
-                onDeleteClick = { appointmentPendingDelete = it },
-                onMarkDone = { viewModel.setStatus(it, AppointmentStatus.DONE) },
-                onMarkCanceled = { viewModel.setStatus(it, AppointmentStatus.CANCELED) }
-            )
+                DayAgenda(
+                    selectedDate = selectedDate,
+                    appointments = appointments,
+                    onAppointmentClick = {
+                        editingAppointment = it
+                        showEditor = true
+                    },
+                    onDeleteClick = { appointmentPendingDelete = it },
+                    onMarkDone = { viewModel.setStatus(it, AppointmentStatus.DONE) },
+                    onMarkCanceled = { viewModel.setStatus(it, AppointmentStatus.CANCELED) },
+                    onTogglePaid = { appt, paid -> viewModel.setPaid(appt, paid) }
+                )
+            } else {
+                AgendaView(
+                    appointments = agendaAppointments,
+                    onAppointmentClick = {
+                        editingAppointment = it
+                        showEditor = true
+                    },
+                    onDeleteClick = { appointmentPendingDelete = it },
+                    onMarkDone = { viewModel.setStatus(it, AppointmentStatus.DONE) },
+                    onMarkCanceled = { viewModel.setStatus(it, AppointmentStatus.CANCELED) },
+                    onTogglePaid = { appt, paid -> viewModel.setPaid(appt, paid) }
+                )
+            }
         }
     }
 
@@ -171,13 +245,14 @@ fun CalendarScreen() {
             initialDate = selectedDate,
             patients = patients,
             editing = editingAppointment,
+            appointmentRepository = app.appointmentRepository,
             onDismiss = { closeEditor() },
-            onSave = { patientId, date, startMinutes, durationMinutes, notes ->
+            onSave = { patientId, date, startMinutes, durationMinutes, notes, feeAmount, isPaid ->
                 val editing = editingAppointment
                 if (editing == null) {
-                    viewModel.addAppointment(patientId, date, startMinutes, durationMinutes, notes)
+                    viewModel.addAppointment(patientId, date, startMinutes, durationMinutes, notes, feeAmount, isPaid)
                 } else {
-                    viewModel.updateAppointment(editing, patientId, date, startMinutes, durationMinutes, notes)
+                    viewModel.updateAppointment(editing, patientId, date, startMinutes, durationMinutes, notes, feeAmount, isPaid)
                 }
                 closeEditor()
             },
@@ -334,7 +409,8 @@ private fun DayAgenda(
     onAppointmentClick: (AppointmentWithPatientName) -> Unit,
     onDeleteClick: (AppointmentWithPatientName) -> Unit,
     onMarkDone: (AppointmentWithPatientName) -> Unit,
-    onMarkCanceled: (AppointmentWithPatientName) -> Unit
+    onMarkCanceled: (AppointmentWithPatientName) -> Unit,
+    onTogglePaid: (AppointmentWithPatientName, Boolean) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -380,9 +456,79 @@ private fun DayAgenda(
                         onClick = { onAppointmentClick(appt) },
                         onDelete = { onDeleteClick(appt) },
                         onMarkDone = { onMarkDone(appt) },
-                        onMarkCanceled = { onMarkCanceled(appt) }
+                        onMarkCanceled = { onMarkCanceled(appt) },
+                        onTogglePaid = { paid -> onTogglePaid(appt, paid) }
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AgendaView(
+    appointments: List<AppointmentWithPatientName>,
+    onAppointmentClick: (AppointmentWithPatientName) -> Unit,
+    onDeleteClick: (AppointmentWithPatientName) -> Unit,
+    onMarkDone: (AppointmentWithPatientName) -> Unit,
+    onMarkCanceled: (AppointmentWithPatientName) -> Unit,
+    onTogglePaid: (AppointmentWithPatientName, Boolean) -> Unit
+) {
+    if (appointments.isEmpty()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                Icons.Filled.EventBusy,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.outline,
+                modifier = Modifier.size(48.dp)
+            )
+            Spacer(Modifier.height(10.dp))
+            Text(
+                text = stringResource(R.string.agenda_empty),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+        }
+        return
+    }
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 20.dp),
+        contentPadding = PaddingValues(bottom = 96.dp, top = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        var lastDate: Long? = null
+        appointments.forEach { appt ->
+            if (appt.dateEpochDay != lastDate) {
+                lastDate = appt.dateEpochDay
+                item(key = "header_${appt.dateEpochDay}") {
+                    Text(
+                        text = JalaliDate.fromEpochDay(appt.dateEpochDay).formatted(),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = SagePrimary,
+                        modifier = Modifier.padding(top = 10.dp, bottom = 2.dp)
+                    )
+                }
+            }
+            item(key = appt.id) {
+                AppointmentRow(
+                    appointment = appt,
+                    onClick = { onAppointmentClick(appt) },
+                    onDelete = { onDeleteClick(appt) },
+                    onMarkDone = { onMarkDone(appt) },
+                    onMarkCanceled = { onMarkCanceled(appt) },
+                    onTogglePaid = { paid -> onTogglePaid(appt, paid) }
+                )
             }
         }
     }
@@ -394,7 +540,8 @@ private fun AppointmentRow(
     onClick: () -> Unit,
     onDelete: () -> Unit,
     onMarkDone: () -> Unit,
-    onMarkCanceled: () -> Unit
+    onMarkCanceled: () -> Unit,
+    onTogglePaid: (Boolean) -> Unit
 ) {
     val statusColor = when (appointment.status) {
         AppointmentStatus.DONE -> statusDone
@@ -438,6 +585,24 @@ private fun AppointmentRow(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                val fee = appointment.feeAmount
+                if (fee != null) {
+                    Spacer(Modifier.height(3.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Filled.Paid,
+                            contentDescription = null,
+                            tint = if (appointment.isPaid) SuccessGreen else WarningAmber,
+                            modifier = Modifier.size(13.dp)
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = "${formatToman(fee)} · ${stringResource(if (appointment.isPaid) R.string.paid_label else R.string.unpaid_label)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (appointment.isPaid) SuccessGreen else WarningAmber
+                        )
+                    }
+                }
             }
             Box {
                 IconButton(onClick = { menuExpanded = true }) {
@@ -454,6 +619,13 @@ private fun AppointmentRow(
                             text = { Text(stringResource(R.string.mark_canceled)) },
                             leadingIcon = { Icon(Icons.Filled.NotInterested, contentDescription = null) },
                             onClick = { menuExpanded = false; onMarkCanceled() }
+                        )
+                    }
+                    if (appointment.feeAmount != null) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(if (appointment.isPaid) R.string.mark_unpaid else R.string.mark_paid)) },
+                            leadingIcon = { Icon(Icons.Filled.Paid, contentDescription = null, tint = SuccessGreen) },
+                            onClick = { menuExpanded = false; onTogglePaid(!appointment.isPaid) }
                         )
                     }
                     DropdownMenuItem(

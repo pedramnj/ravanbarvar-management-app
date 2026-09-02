@@ -18,6 +18,8 @@ data class AppointmentWithPatientName(
     val notes: String,
     val status: String,
     val createdAt: Long,
+    val feeAmount: Long?,
+    val isPaid: Boolean,
     val firstName: String,
     val lastName: String
 ) {
@@ -29,7 +31,9 @@ data class AppointmentWithPatientName(
         durationMinutes = durationMinutes,
         notes = notes,
         status = status,
-        createdAt = createdAt
+        createdAt = createdAt,
+        feeAmount = feeAmount,
+        isPaid = isPaid
     )
 
     val patientFullName: String get() = "$firstName $lastName"
@@ -95,4 +99,14 @@ interface AppointmentDao {
 
     @Query("SELECT * FROM appointments WHERE id = :id")
     suspend fun getById(id: Long): AppointmentEntity?
+
+    @Query(
+        """
+        SELECT a.*, p.firstName as firstName, p.lastName as lastName
+        FROM appointments a
+        INNER JOIN patients p ON p.id = a.patientId
+        WHERE a.status = 'SCHEDULED' AND a.dateEpochDay >= :fromEpochDay
+        """
+    )
+    suspend fun getScheduledFrom(fromEpochDay: Long): List<AppointmentWithPatientName>
 }

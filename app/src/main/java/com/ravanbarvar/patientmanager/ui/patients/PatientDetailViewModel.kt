@@ -38,6 +38,7 @@ class PatientDetailViewModel(
     var gender by mutableStateOf(Gender.MALE)
     var notes by mutableStateOf("")
     var birthDate by mutableStateOf<JalaliDate?>(null)
+    var photoUri by mutableStateOf<String?>(null)
     var isLoaded by mutableStateOf(initialPatientId <= 0)
         private set
     var isSaving by mutableStateOf(false)
@@ -62,6 +63,7 @@ class PatientDetailViewModel(
                     gender = p.gender
                     notes = p.notes
                     birthDate = p.birthDateEpochDay?.let { JalaliDate.fromEpochDay(it) }
+                    photoUri = p.photoUri
                     createdAt = p.createdAt
                 }
                 isLoaded = true
@@ -85,6 +87,11 @@ class PatientDetailViewModel(
             }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val sessionHistory: StateFlow<List<AppointmentWithPatientName>> = snapshotFlow { patientId }
+        .flatMapLatest { id -> if (id == null) flowOf(emptyList()) else appointmentRepository.observeForPatient(id) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun onFieldsChanged() {
         saveError = null
@@ -110,7 +117,8 @@ class PatientDetailViewModel(
                         gender = gender,
                         notes = notes,
                         createdAt = now,
-                        updatedAt = now
+                        updatedAt = now,
+                        photoUri = photoUri
                     )
                 )
                 createdAt = now
@@ -129,7 +137,8 @@ class PatientDetailViewModel(
                         gender = gender,
                         notes = notes,
                         createdAt = createdAt,
-                        updatedAt = now
+                        updatedAt = now,
+                        photoUri = photoUri
                     )
                 )
                 isSaving = false

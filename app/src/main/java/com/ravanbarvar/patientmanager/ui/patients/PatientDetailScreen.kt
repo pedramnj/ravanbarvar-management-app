@@ -32,6 +32,9 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Paid
+import androidx.compose.material.icons.filled.PersonOutline
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -64,6 +67,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -71,14 +75,23 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import coil.compose.AsyncImage
 import com.ravanbarvar.patientmanager.R
+import com.ravanbarvar.patientmanager.data.local.dao.AppointmentWithPatientName
+import com.ravanbarvar.patientmanager.data.local.entity.AppointmentStatus
 import com.ravanbarvar.patientmanager.data.local.entity.DocumentEntity
 import com.ravanbarvar.patientmanager.data.local.entity.Gender
 import com.ravanbarvar.patientmanager.ui.currentApp
 import com.ravanbarvar.patientmanager.ui.theme.LavenderSecondary
 import com.ravanbarvar.patientmanager.ui.theme.SagePrimary
+import com.ravanbarvar.patientmanager.ui.theme.SuccessGreen
+import com.ravanbarvar.patientmanager.ui.theme.WarningAmber
+import com.ravanbarvar.patientmanager.ui.theme.statusCanceled
+import com.ravanbarvar.patientmanager.ui.theme.statusDone
+import com.ravanbarvar.patientmanager.ui.theme.statusScheduled
 import com.ravanbarvar.patientmanager.util.DocumentUtils
 import com.ravanbarvar.patientmanager.util.JalaliDate
+import com.ravanbarvar.patientmanager.util.formatToman
 import com.ravanbarvar.patientmanager.util.minutesToPersianClock
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -94,12 +107,16 @@ fun PatientDetailScreen(patientId: Long, onBack: () -> Unit, onDeleted: () -> Un
 
     val documents by viewModel.documents.collectAsState()
     val upcoming by viewModel.upcomingAppointment.collectAsState()
+    val sessionHistory by viewModel.sessionHistory.collectAsState()
 
     var showBirthDatePicker by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var showAddDocMenu by remember { mutableStateOf(false) }
+    var showAvatarMenu by remember { mutableStateOf(false) }
     var docPendingDelete by remember { mutableStateOf<DocumentEntity?>(null) }
     var pendingCaptureUri by remember { mutableStateOf<Uri?>(null) }
+    var pendingAvatarCaptureUri by remember { mutableStateOf<Uri?>(null) }
+    val avatarKey = remember { viewModel.patientId?.toString() ?: java.util.UUID.randomUUID().toString() }
 
     val requiredFieldError = stringResource(R.string.required_field_error)
 
@@ -144,6 +161,32 @@ fun PatientDetailScreen(patientId: Long, onBack: () -> Unit, onDeleted: () -> Un
         }
     }
 
+    val pickAvatarLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            try {
+                context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            } catch (_: SecurityException) {
+            }
+            viewModel.photoUri = uri.toString()
+        }
+    }
+
+    val takeAvatarPictureLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+        val uri = pendingAvatarCaptureUri
+        if (success && uri != null) {
+            viewModel.photoUri = uri.toString()
+        }
+        pendingAvatarCaptureUri = null
+    }
+
+    val avatarCameraPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) {
+            val uri = DocumentUtils.createAvatarCaptureUri(context, avatarKey)
+            pendingAvatarCaptureUri = uri
+            takeAvatarPictureLauncher.launch(uri)
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -184,6 +227,73 @@ fun PatientDetailScreen(patientId: Long, onBack: () -> Unit, onDeleted: () -> Un
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 16.dp)
         ) {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Box {
+                    Box(
+                        modifier = Modifier
+                            .size(88.dp)
+                            .clip(CircleShape)
+                            .background(LavenderSecondary.copy(alpha = 0.18f))
+                            .clickable { showAvatarMenu = true },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (viewModel.photoUri != null) {
+                            AsyncImage(
+                                model = viewModel.photoUri,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(88.dp)
+                                    .clip(CircleShape)
+                            )
+                        } else {
+                            Icon(
+                                Icons.Filled.PersonOutline,
+                                contentDescription = null,
+                                tint = LavenderSecondary,
+                                modifier = Modifier.size(40.dp)
+                            )
+                        }
+                    }
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .size(30.dp)
+                            .clip(CircleShape)
+                            .background(SagePrimary)
+                            .clickable { showAvatarMenu = true },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Filled.PhotoCamera,
+                            contentDescription = stringResource(R.string.change_photo),
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                    DropdownMenu(expanded = showAvatarMenu, onDismissRequest = { showAvatarMenu = false }) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.add_from_files)) },
+                            leadingIcon = { Icon(Icons.Filled.Folder, contentDescription = null) },
+                            onClick = {
+                                showAvatarMenu = false
+                                pickAvatarLauncher.launch(arrayOf("image/*"))
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.take_photo)) },
+                            leadingIcon = { Icon(Icons.Filled.CameraAlt, contentDescription = null) },
+                            onClick = {
+                                showAvatarMenu = false
+                                avatarCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                            }
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+
             if (!viewModel.isNew) {
                 UpcomingAppointmentCard(upcoming)
                 Spacer(Modifier.height(16.dp))
@@ -288,6 +398,26 @@ fun PatientDetailScreen(patientId: Long, onBack: () -> Unit, onDeleted: () -> Un
             )
 
             Spacer(Modifier.height(22.dp))
+
+            if (!viewModel.isNew) {
+                Text(stringResource(R.string.session_history), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
+                Spacer(Modifier.height(8.dp))
+                if (sessionHistory.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.no_session_history),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 6.dp)
+                    )
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        sessionHistory.forEach { appt ->
+                            SessionHistoryRow(appointment = appt)
+                        }
+                    }
+                }
+                Spacer(Modifier.height(22.dp))
+            }
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -425,7 +555,7 @@ fun PatientDetailScreen(patientId: Long, onBack: () -> Unit, onDeleted: () -> Un
 }
 
 @Composable
-private fun UpcomingAppointmentCard(upcoming: com.ravanbarvar.patientmanager.data.local.dao.AppointmentWithPatientName?) {
+private fun UpcomingAppointmentCard(upcoming: AppointmentWithPatientName?) {
     Card(
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
@@ -449,6 +579,66 @@ private fun UpcomingAppointmentCard(upcoming: com.ravanbarvar.patientmanager.dat
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Medium
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SessionHistoryRow(appointment: AppointmentWithPatientName) {
+    val statusColor = when (appointment.status) {
+        AppointmentStatus.DONE -> statusDone
+        AppointmentStatus.CANCELED -> statusCanceled
+        else -> statusScheduled
+    }
+    val statusLabel = when (appointment.status) {
+        AppointmentStatus.DONE -> stringResource(R.string.appointment_status_done)
+        AppointmentStatus.CANCELED -> stringResource(R.string.appointment_status_canceled)
+        else -> stringResource(R.string.appointment_status_scheduled)
+    }
+    Card(
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .clip(CircleShape)
+                    .background(statusColor)
+            )
+            Spacer(Modifier.width(10.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "${JalaliDate.fromEpochDay(appointment.dateEpochDay).formatted()} · ${minutesToPersianClock(appointment.startMinutes)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = statusLabel,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            val fee = appointment.feeAmount
+            if (fee != null) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Filled.Paid,
+                        contentDescription = null,
+                        tint = if (appointment.isPaid) SuccessGreen else WarningAmber,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = formatToman(fee),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (appointment.isPaid) SuccessGreen else WarningAmber
+                    )
+                }
             }
         }
     }

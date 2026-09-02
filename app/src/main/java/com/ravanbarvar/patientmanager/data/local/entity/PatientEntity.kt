@@ -14,7 +14,8 @@ data class PatientEntity(
     val gender: String,
     val notes: String,
     val createdAt: Long,
-    val updatedAt: Long
+    val updatedAt: Long,
+    val photoUri: String? = null
 )
 
 object Gender {

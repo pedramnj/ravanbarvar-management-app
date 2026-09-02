@@ -16,9 +16,18 @@
     <string name="default_credentials_hint">نام کاربری پیش‌فرض: admin — رمز عبور: admin123</string>
 
     <!-- Navigation -->
+    <string name="nav_dashboard">داشبورد</string>
     <string name="nav_calendar">تقویم</string>
     <string name="nav_patients">بیماران</string>
     <string name="nav_settings">تنظیمات</string>
+
+    <!-- Dashboard -->
+    <string name="stat_total_patients">کل بیماران</string>
+    <string name="stat_new_patients_month">بیمار جدید این ماه</string>
+    <string name="stat_today_appointments">نوبت‌های امروز</string>
+    <string name="stat_week_appointments">نوبت‌های این هفته</string>
+    <string name="stat_revenue_month">درآمد این ماه</string>
+    <string name="stat_outstanding">مطالبات معوق</string>
 
     <!-- Calendar -->
     <string name="calendar_title">تقویم نوبت‌ها</string>
@@ -46,6 +55,17 @@
     <string name="prev_month">ماه قبل</string>
     <string name="next_month">ماه بعد</string>
     <string name="no_patients_for_appointment">ابتدا یک بیمار ثبت کنید</string>
+    <string name="calendar_view_month">نمای ماهانه</string>
+    <string name="calendar_view_agenda">نمای فهرستی</string>
+    <string name="agenda_empty">نوبتی برای روزهای آینده ثبت نشده است</string>
+    <string name="appointment_fee">هزینهٔ جلسه (تومان)</string>
+    <string name="appointment_fee_hint">اختیاری</string>
+    <string name="appointment_paid">پرداخت شده</string>
+    <string name="appointment_conflict_warning">این بازه با نوبت %1$s تداخل دارد</string>
+    <string name="paid_label">پرداخت‌شده</string>
+    <string name="unpaid_label">پرداخت‌نشده</string>
+    <string name="mark_paid">علامت‌گذاری به‌عنوان پرداخت‌شده</string>
+    <string name="mark_unpaid">علامت‌گذاری به‌عنوان پرداخت‌نشده</string>
 
     <!-- Patients -->
     <string name="patients_title">لیست بیماران</string>
@@ -69,6 +89,9 @@
     <string name="add_from_files">انتخاب از فایل‌ها</string>
     <string name="take_photo">عکس با دوربین</string>
     <string name="no_documents">هنوز مدرکی بارگذاری نشده است</string>
+    <string name="change_photo">تغییر عکس</string>
+    <string name="session_history">تاریخچهٔ جلسات</string>
+    <string name="no_session_history">هنوز جلسه‌ای برای این بیمار ثبت نشده است</string>
     <string name="confirm_delete_patient_title">حذف بیمار</string>
     <string name="confirm_delete_patient_msg">با حذف بیمار، تمام نوبت‌ها و مدارک او نیز حذف خواهد شد. ادامه می‌دهید؟</string>
     <string name="confirm_delete_document_title">حذف مدرک</string>
@@ -98,6 +121,8 @@
     <string name="change_password_error_mismatch">رمز عبور جدید و تکرار آن یکسان نیستند</string>
     <string name="change_password_error_wrong_current">رمز عبور فعلی اشتباه است</string>
     <string name="change_password_error_short">رمز عبور باید حداقل ۴ کاراکتر باشد</string>
+    <string name="appointment_reminders">یادآوری نوبت‌ها</string>
+    <string name="appointment_reminders_hint">۳۰ دقیقه پیش از شروع نوبت اطلاع‌رسانی می‌شود</string>
     <string name="logout">خروج از حساب</string>
     <string name="logout_confirm_title">خروج از حساب</string>
     <string name="logout_confirm_msg">آیا مطمئن هستید که می‌خواهید خارج شوید؟</string>

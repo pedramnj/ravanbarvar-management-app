@@ -35,6 +35,9 @@ interface PatientDao {
     @Query("SELECT COUNT(*) FROM patients")
     fun observeCount(): Flow<Int>
 
+    @Query("SELECT COUNT(*) FROM patients WHERE createdAt >= :sinceMillis")
+    fun observeCountCreatedSince(sinceMillis: Long): Flow<Int>
+
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(patient: PatientEntity): Long
 

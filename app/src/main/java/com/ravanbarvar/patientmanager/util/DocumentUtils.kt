@@ -24,6 +24,13 @@ object DocumentUtils {
         val file = File(dir, "IMG_${System.currentTimeMillis()}.jpg")
         return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
     }
+
+    /** [key] can be a saved patient's id, or any stable placeholder for a not-yet-saved one. */
+    fun createAvatarCaptureUri(context: Context, key: String): Uri {
+        val dir = File(context.filesDir, "photos").apply { mkdirs() }
+        val file = File(dir, "avatar_${key}_${System.currentTimeMillis()}.jpg")
+        return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+    }
 }
 
 fun currentMinutesOfDay(): Int {
