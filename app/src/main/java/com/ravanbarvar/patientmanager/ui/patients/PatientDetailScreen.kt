@@ -133,6 +133,17 @@ fun PatientDetailScreen(patientId: Long, onBack: () -> Unit, onDeleted: () -> Un
         }
     }
 
+    // Documents attach to a saved patient record. If the admin hasn't saved yet
+    // (still filling in a brand-new patient), save it first — silently, using
+    // whatever is already filled in — then continue with the requested action.
+    fun addDocumentAction(action: () -> Unit) {
+        if (viewModel.patientId != null) {
+            action()
+        } else {
+            viewModel.save(requiredFieldError) { action() }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -284,31 +295,29 @@ fun PatientDetailScreen(patientId: Long, onBack: () -> Unit, onDeleted: () -> Un
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(stringResource(R.string.patient_documents), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
-                if (!viewModel.isNew) {
-                    Box {
-                        TextButton(onClick = { showAddDocMenu = true }) {
-                            Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text(stringResource(R.string.add_document))
-                        }
-                        DropdownMenu(expanded = showAddDocMenu, onDismissRequest = { showAddDocMenu = false }) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.add_from_files)) },
-                                leadingIcon = { Icon(Icons.Filled.Folder, contentDescription = null) },
-                                onClick = {
-                                    showAddDocMenu = false
-                                    pickFileLauncher.launch(arrayOf("image/*", "application/pdf"))
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.take_photo)) },
-                                leadingIcon = { Icon(Icons.Filled.CameraAlt, contentDescription = null) },
-                                onClick = {
-                                    showAddDocMenu = false
-                                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                                }
-                            )
-                        }
+                Box {
+                    TextButton(onClick = { showAddDocMenu = true }) {
+                        Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(stringResource(R.string.add_document))
+                    }
+                    DropdownMenu(expanded = showAddDocMenu, onDismissRequest = { showAddDocMenu = false }) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.add_from_files)) },
+                            leadingIcon = { Icon(Icons.Filled.Folder, contentDescription = null) },
+                            onClick = {
+                                showAddDocMenu = false
+                                addDocumentAction { pickFileLauncher.launch(arrayOf("image/*", "application/pdf")) }
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.take_photo)) },
+                            leadingIcon = { Icon(Icons.Filled.CameraAlt, contentDescription = null) },
+                            onClick = {
+                                showAddDocMenu = false
+                                addDocumentAction { cameraPermissionLauncher.launch(Manifest.permission.CAMERA) }
+                            }
+                        )
                     }
                 }
             }
