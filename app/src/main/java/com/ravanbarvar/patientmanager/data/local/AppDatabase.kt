@@ -9,14 +9,11 @@ import com.ravanbarvar.patientmanager.data.local.dao.AdminDao
 import com.ravanbarvar.patientmanager.data.local.dao.AppointmentDao
 import com.ravanbarvar.patientmanager.data.local.dao.DocumentDao
 import com.ravanbarvar.patientmanager.data.local.dao.PatientDao
-import com.ravanbarvar.patientmanager.data.local.entity.AdminUserEntity
 import com.ravanbarvar.patientmanager.data.local.entity.AppointmentEntity
 import com.ravanbarvar.patientmanager.data.local.entity.DocumentEntity
+import com.ravanbarvar.patientmanager.data.local.entity.AdminUserEntity
 import com.ravanbarvar.patientmanager.data.local.entity.PatientEntity
 import com.ravanbarvar.patientmanager.util.PasswordHasher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 const val DEFAULT_ADMIN_USERNAME = "admin"
 const val DEFAULT_ADMIN_PASSWORD = "admin123"
@@ -43,34 +40,26 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         private fun build(context: Context): AppDatabase {
-            val seedScope = CoroutineScope(Dispatchers.IO)
-            lateinit var database: AppDatabase
-            database = Room.databaseBuilder(
+            return Room.databaseBuilder(
                 context.applicationContext,
                 AppDatabase::class.java,
                 "ravanbarvar.db"
             ).addCallback(object : Callback() {
                 override fun onCreate(db: SupportSQLiteDatabase) {
                     super.onCreate(db)
-                    seedScope.launch {
-                        val dao = database.adminDao()
-                        if (dao.count() == 0) {
-                            val salt = PasswordHasher.generateSalt()
-                            val hash = PasswordHasher.hash(DEFAULT_ADMIN_PASSWORD, salt)
-                            dao.insert(
-                                AdminUserEntity(
-                                    username = DEFAULT_ADMIN_USERNAME,
-                                    passwordHash = hash,
-                                    salt = salt,
-                                    fullName = "مدیر کلینیک",
-                                    createdAt = System.currentTimeMillis()
-                                )
-                            )
-                        }
-                    }
+                    // Runs synchronously as part of database creation, before any other
+                    // query can reach this database — so the seed is guaranteed to be
+                    // there by the time the login screen queries for it. (A previous
+                    // version seeded this from a fire-and-forget coroutine, which raced
+                    // the very first login attempt on a fresh install.)
+                    val salt = PasswordHasher.generateSalt()
+                    val hash = PasswordHasher.hash(DEFAULT_ADMIN_PASSWORD, salt)
+                    db.execSQL(
+                        "INSERT INTO admin_user (username, passwordHash, salt, fullName, createdAt) VALUES (?, ?, ?, ?, ?)",
+                        arrayOf(DEFAULT_ADMIN_USERNAME, hash, salt, "مدیر کلینیک", System.currentTimeMillis())
+                    )
                 }
             }).build()
-            return database
         }
     }
 }

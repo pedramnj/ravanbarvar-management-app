@@ -1,6 +1,7 @@
 package com.ravanbarvar.patientmanager.ui.login
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -38,8 +38,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -52,7 +52,6 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.ravanbarvar.patientmanager.R
 import com.ravanbarvar.patientmanager.ui.currentApp
-import com.ravanbarvar.patientmanager.ui.theme.LavenderSecondary
 import com.ravanbarvar.patientmanager.ui.theme.SagePrimary
 
 @Composable
@@ -203,20 +202,11 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
 
 @Composable
 private fun BrandMark() {
-    Box(
-        modifier = Modifier
-            .size(96.dp)
-            .clip(CircleShape)
-            .background(Brush.linearGradient(listOf(SagePrimary, LavenderSecondary))),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "ر",
-            style = MaterialTheme.typography.displaySmall,
-            color = MaterialTheme.colorScheme.onPrimary,
-            fontWeight = FontWeight.Bold
-        )
-    }
+    Image(
+        painter = painterResource(R.drawable.logo_mark),
+        contentDescription = stringResource(R.string.app_name),
+        modifier = Modifier.size(120.dp)
+    )
 }
 
 @Composable
