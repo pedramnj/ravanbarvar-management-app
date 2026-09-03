@@ -1,5 +1,10 @@
 package com.ravanbarvar.patientmanager.ui.settings
 
+import android.app.AlarmManager
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,6 +27,7 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -38,6 +44,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,11 +53,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -58,6 +70,7 @@ import com.ravanbarvar.patientmanager.R
 import com.ravanbarvar.patientmanager.ui.currentApp
 import com.ravanbarvar.patientmanager.ui.theme.LavenderSecondary
 import com.ravanbarvar.patientmanager.ui.theme.SagePrimary
+import com.ravanbarvar.patientmanager.ui.theme.WarningAmber
 
 @Composable
 fun SettingsScreen(onLoggedOut: () -> Unit) {
@@ -68,6 +81,21 @@ fun SettingsScreen(onLoggedOut: () -> Unit) {
     val admin by viewModel.currentAdmin.collectAsState()
     val passwordState by viewModel.changePasswordState.collectAsState()
     val remindersEnabled by viewModel.remindersEnabled.collectAsState()
+
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var canScheduleExactAlarms by remember {
+        mutableStateOf(canScheduleExactAlarms(context))
+    }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                canScheduleExactAlarms = canScheduleExactAlarms(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     var showLogoutConfirm by remember { mutableStateOf(false) }
 
@@ -220,31 +248,72 @@ fun SettingsScreen(onLoggedOut: () -> Unit) {
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(18.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Filled.NotificationsActive, contentDescription = null, tint = SagePrimary)
-                Spacer(Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.appointment_reminders),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Text(
-                        text = stringResource(R.string.appointment_reminders_hint),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+            Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(18.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Filled.NotificationsActive, contentDescription = null, tint = SagePrimary)
+                    Spacer(Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.appointment_reminders),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = stringResource(R.string.appointment_reminders_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = remindersEnabled,
+                        onCheckedChange = viewModel::setRemindersEnabled,
+                        colors = SwitchDefaults.colors(checkedThumbColor = SagePrimary, checkedTrackColor = SagePrimary.copy(alpha = 0.5f))
                     )
                 }
-                Switch(
-                    checked = remindersEnabled,
-                    onCheckedChange = viewModel::setRemindersEnabled,
-                    colors = SwitchDefaults.colors(checkedThumbColor = SagePrimary, checkedTrackColor = SagePrimary.copy(alpha = 0.5f))
-                )
+
+                if (remindersEnabled && !canScheduleExactAlarms) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 18.dp, end = 18.dp, bottom = 18.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(WarningAmber.copy(alpha = 0.14f))
+                                .padding(12.dp)
+                        ) {
+                            Icon(Icons.Filled.WarningAmber, contentDescription = null, tint = WarningAmber)
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                text = stringResource(R.string.exact_alarm_warning),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                        Spacer(Modifier.height(10.dp))
+                        OutlinedButton(
+                            onClick = {
+                                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                                    data = Uri.parse("package:${context.packageName}")
+                                }
+                                context.startActivity(intent)
+                            },
+                            shape = RoundedCornerShape(14.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(stringResource(R.string.exact_alarm_grant_button))
+                        }
+                    }
+                }
             }
         }
 
@@ -314,3 +383,9 @@ private fun fieldColors() = OutlinedTextFieldDefaults.colors(
     focusedLabelColor = SagePrimary,
     cursorColor = SagePrimary
 )
+
+private fun canScheduleExactAlarms(context: android.content.Context): Boolean {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return true
+    val alarmManager = ContextCompat.getSystemService(context, AlarmManager::class.java) ?: return true
+    return alarmManager.canScheduleExactAlarms()
+}

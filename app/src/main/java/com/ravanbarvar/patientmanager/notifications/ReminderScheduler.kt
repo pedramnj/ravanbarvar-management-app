@@ -4,14 +4,17 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import java.time.LocalDate
 import java.time.ZoneId
 
 /**
  * Schedules a local notification [LEAD_MINUTES] before an appointment's start time via
- * AlarmManager. Uses the inexact `setAndAllowWhileIdle` variant deliberately — a reminder
- * landing a few minutes off doesn't matter here, and it avoids needing the sensitive
- * "schedule exact alarms" permission.
+ * AlarmManager. Uses an exact alarm when the app is allowed to (SCHEDULE_EXACT_ALARM,
+ * auto-granted on most devices but user-revocable) — a plain inexact alarm's delivery
+ * window can run to 10+ minutes on this OS, which for a 30-minute lead time means the
+ * reminder can arrive so late it looks like it never fired. Falls back to the inexact
+ * variant only if exact scheduling isn't currently permitted.
  */
 object ReminderScheduler {
     const val LEAD_MINUTES = 30L
@@ -47,7 +50,12 @@ object ReminderScheduler {
         if (triggerAtMillis <= System.currentTimeMillis()) return
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
         val pi = pendingIntent(context, appointmentId, patientName, timeLabel)
-        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pi)
+        val canScheduleExact = Build.VERSION.SDK_INT < Build.VERSION_CODES.S || alarmManager.canScheduleExactAlarms()
+        if (canScheduleExact) {
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pi)
+        } else {
+            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pi)
+        }
     }
 
     fun cancel(context: Context, appointmentId: Long) {

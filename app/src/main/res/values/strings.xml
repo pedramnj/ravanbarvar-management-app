@@ -131,6 +131,8 @@
     <string name="change_password_error_short">رمز عبور باید حداقل ۴ کاراکتر باشد</string>
     <string name="appointment_reminders">یادآوری نوبت‌ها</string>
     <string name="appointment_reminders_hint">۳۰ دقیقه پیش از شروع نوبت اطلاع‌رسانی می‌شود</string>
+    <string name="exact_alarm_warning">برای اطلاع‌رسانی دقیق، اجازهٔ «زنگ‌هشدار و یادآوری» لازم است. بدون آن ممکن است یادآوری دیرتر برسد.</string>
+    <string name="exact_alarm_grant_button">فعال‌سازی یادآوری دقیق</string>
     <string name="logout">خروج از حساب</string>
     <string name="logout_confirm_title">خروج از حساب</string>
     <string name="logout_confirm_msg">آیا مطمئن هستید که می‌خواهید خارج شوید؟</string>
