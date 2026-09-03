@@ -73,6 +73,14 @@
     <string name="add_patient">افزودن بیمار</string>
     <string name="no_patients">هنوز بیماری ثبت نشده است</string>
     <string name="no_patients_hint">با دکمهٔ زیر اولین بیمار را اضافه کنید</string>
+    <string name="import_from_contacts">وارد کردن از مخاطبین</string>
+    <string name="import_contacts_title">وارد کردن از مخاطبین</string>
+    <string name="import_contacts_permission_rationale">برای وارد کردن مخاطبین به‌صورت گروهی، دسترسی به لیست تماس‌های دستگاه لازم است</string>
+    <string name="grant_contacts_permission">اجازهٔ دسترسی به مخاطبین</string>
+    <string name="import_contacts_search_hint">جستجوی نام یا شماره…</string>
+    <string name="import_contacts_empty">مخاطب جدیدی برای وارد کردن یافت نشد</string>
+    <string name="select_all">انتخاب همه</string>
+    <string name="import_selected_button">افزودن %1$s بیمار</string>
     <string name="patient_first_name">نام</string>
     <string name="patient_last_name">نام خانوادگی</string>
     <string name="patient_phone">شماره تماس</string>

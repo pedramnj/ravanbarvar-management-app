@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.WarningAmber
@@ -27,6 +26,9 @@ import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -146,23 +148,24 @@ fun AppointmentEditorSheet(
                 )
             } else {
                 val selectedPatient = patients.firstOrNull { it.id == selectedPatientId }
-                Box(modifier = Modifier.fillMaxWidth()) {
+                ExposedDropdownMenuBox(
+                    expanded = patientMenuExpanded,
+                    onExpandedChange = { patientMenuExpanded = it }
+                ) {
                     OutlinedTextField(
                         value = selectedPatient?.let { "${it.firstName} ${it.lastName}" } ?: stringResource(R.string.choose_patient_placeholder),
                         onValueChange = {},
                         readOnly = true,
-                        trailingIcon = {
-                            Icon(Icons.Filled.ArrowDropDown, contentDescription = null)
-                        },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = patientMenuExpanded) },
                         shape = RoundedCornerShape(14.dp),
                         modifier = Modifier
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable, true)
                             .fillMaxWidth()
-                            .clickable { patientMenuExpanded = true }
                     )
                     DropdownMenu(
                         expanded = patientMenuExpanded,
                         onDismissRequest = { patientMenuExpanded = false },
-                        modifier = Modifier.fillMaxWidth(0.85f)
+                        modifier = Modifier.exposedDropdownSize()
                     ) {
                         patients.forEach { p ->
                             DropdownMenuItem(

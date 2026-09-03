@@ -370,18 +370,27 @@ fun PatientDetailScreen(patientId: Long, onBack: () -> Unit, onDeleted: () -> Un
 
             Text(stringResource(R.string.patient_birth_date), style = MaterialTheme.typography.labelLarge)
             Spacer(Modifier.height(6.dp))
-            OutlinedTextField(
-                value = viewModel.birthDate?.formatted() ?: "",
-                onValueChange = {},
-                readOnly = true,
-                placeholder = { Text(stringResource(R.string.select_date)) },
-                trailingIcon = { Icon(Icons.Filled.Event, contentDescription = null) },
-                shape = RoundedCornerShape(14.dp),
-                colors = fieldColors(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { showBirthDatePicker = true }
-            )
+            Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = viewModel.birthDate?.formatted() ?: "",
+                    onValueChange = {},
+                    readOnly = true,
+                    placeholder = { Text(stringResource(R.string.select_date)) },
+                    trailingIcon = { Icon(Icons.Filled.Event, contentDescription = null) },
+                    shape = RoundedCornerShape(14.dp),
+                    colors = fieldColors(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                // A transparent overlay, rather than .clickable on the field itself: a
+                // readOnly OutlinedTextField still runs its own internal touch handling
+                // for focus/cursor, which competes with an outer clickable and made this
+                // tap register inconsistently. The overlay intercepts the tap first.
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable { showBirthDatePicker = true }
+                )
+            }
 
             Spacer(Modifier.height(16.dp))
 

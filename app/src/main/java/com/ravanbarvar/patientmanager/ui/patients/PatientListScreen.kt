@@ -20,11 +20,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.ImportContacts
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -52,7 +54,7 @@ import com.ravanbarvar.patientmanager.ui.theme.LavenderSecondary
 import com.ravanbarvar.patientmanager.ui.theme.SagePrimary
 
 @Composable
-fun PatientListScreen(onPatientClick: (Long) -> Unit, onAddPatient: () -> Unit) {
+fun PatientListScreen(onPatientClick: (Long) -> Unit, onAddPatient: () -> Unit, onImportContacts: () -> Unit) {
     val app = currentApp()
     val viewModel: PatientListViewModel = viewModel(
         factory = viewModelFactory { initializer { PatientListViewModel(app.patientRepository) } }
@@ -72,12 +74,26 @@ fun PatientListScreen(onPatientClick: (Long) -> Unit, onAddPatient: () -> Unit) 
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            Text(
-                text = stringResource(R.string.patients_title),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp)
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.patients_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.SemiBold
+                )
+                IconButton(onClick = onImportContacts) {
+                    Icon(
+                        Icons.Filled.ImportContacts,
+                        contentDescription = stringResource(R.string.import_from_contacts),
+                        tint = SagePrimary
+                    )
+                }
+            }
 
             OutlinedTextField(
                 value = query,

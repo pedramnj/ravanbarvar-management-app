@@ -10,6 +10,7 @@ import androidx.navigation.navArgument
 import com.ravanbarvar.patientmanager.ui.calendar.CalendarScreen
 import com.ravanbarvar.patientmanager.ui.dashboard.DashboardScreen
 import com.ravanbarvar.patientmanager.ui.login.LoginScreen
+import com.ravanbarvar.patientmanager.ui.patients.ImportContactsScreen
 import com.ravanbarvar.patientmanager.ui.patients.PatientDetailScreen
 import com.ravanbarvar.patientmanager.ui.patients.PatientListScreen
 import com.ravanbarvar.patientmanager.ui.settings.SettingsScreen
@@ -52,7 +53,15 @@ fun RavanbarvarNavGraph(navController: NavHostController) {
         composable(Routes.Patients) {
             PatientListScreen(
                 onPatientClick = { id -> navController.navigate(Routes.patientDetail(id)) },
-                onAddPatient = { navController.navigate(Routes.patientDetail(-1L)) }
+                onAddPatient = { navController.navigate(Routes.patientDetail(-1L)) },
+                onImportContacts = { navController.navigate(Routes.ImportContacts) }
+            )
+        }
+
+        composable(Routes.ImportContacts) {
+            ImportContactsScreen(
+                onBack = { navController.popBackStack() },
+                onImported = { navController.popBackStack() }
             )
         }
 
